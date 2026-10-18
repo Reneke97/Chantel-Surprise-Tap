@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fff7ed">
+<title>Sweet Surprise Tap 🍬</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #fff7ed, #fdf2f8, #eff6ff); color: #1f2937;
+  }
+  .card {
+    width: min(560px, 100%); background: rgba(255,255,255,.96); border-radius: 28px;
+    padding: 34px 26px; text-align: center; box-shadow: 0 18px 60px rgba(0,0,0,.12);
+  }
+  .emoji { font-size: 64px; }
+  h1 { margin: 14px 0 8px; font-size: clamp(30px, 7vw, 38px); }
+  .sub { color: #6b7280; margin: 0 auto 24px; line-height: 1.5; }
+  .result {
+    min-height: 170px; display: grid; place-items: center; border: 2px dashed #d1d5db;
+    border-radius: 20px; padding: 24px; margin: 22px 0; background: #fafafa;
+  }
+  .result h2 { margin: 0 0 10px; font-size: 25px; }
+  .result p { margin: 0; font-size: 18px; line-height: 1.5; }
+  .small { margin-top: 18px; color: #9ca3af; font-size: 12px; }
+  .spin { animation: pop .45s ease; }
+  @keyframes pop { 0% { transform: scale(.92); opacity: .2; } 100% { transform: scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="emoji" aria-hidden="true">🍬</div>
+  <h1>Sweet Surprise Tap</h1>
+  <p class="sub">You've found the secret tag! Let's see what you've unlocked...</p>
+  <section id="result" class="result" aria-live="polite">
+    <div><h2>🎲 Choosing your surprise...</h2><p>Just a moment!</p></div>
+  </section>
+  <div class="small"><span id="count">0</span> possible surprises • randomly selected</div>
+</main>
+<script>
+const surprises = [
+  // Treat prizes: only sweets, snacks and chocolates
+  ["🍫 YOU WON A CHOCOLATE!", "You've won a chocolate! Please collect your treat from the team organiser. 😄"],
+  ["🍬 SWEET SUCCESS!", "You've won a sweet! A tiny treat for a job well done."],
+  ["🥨 SNACK ATTACK!", "You've won a snack! Please collect your treat from the team organiser."],
+  ["🍫 CHOCOLATE BREAK!", "Good news: chocolate is on the menu. Please collect your treat!"],
+  ["🍭 SWEET TREAT ALERT!", "You've won a sweet treat. Enjoy every bite!"],
+  ["🍿 SNACK TIME!", "You've won a snack. Your next few minutes just got tastier."],
+  ["🍫 COCOA GOOD NEWS!", "A little chocolate has your name on it. Please collect your treat from the team organiser."],
+  ["🍬 A LITTLE SOMETHING SWEET", "You've won a sweet! Because little things can make a big difference."],
+
+  // Conversation starters
+  ["🤔 QUESTION OF THE DAY", "What is one thing that should be illegal in an office? Defend your answer."],
+  ["⚖️ THIS OR THAT", "Would you rather have every Friday off or finish work every day at 13:00?"],
+  ["🌍 DREAM DESTINATION", "If money were no object, where in the world would you go tomorrow?"],
+  ["🎬 MOVIE NIGHT", "What movie could you watch 100 times without getting tired of it?"],
+  ["🍽️ LAST MEAL", "If you could eat one meal for the rest of your life, what would it be?"],
+  ["🎵 THROWBACK TIME", "What song instantly takes you back to a specific time in your life?"],
+  ["🐾 PET PERSONALITY", "If your pet could talk, what would be the first thing it would complain about?"],
+  ["🎒 SCHOOL DAYS", "What is something you believed as a child that makes you laugh now?"],
+  ["💡 SECRET TALENT", "What is a random skill you have that most people here don't know about?"],
+  ["🏡 PERFECT DAY", "Describe your perfect Saturday in three sentences."],
+  ["📺 COMFORT SHOW", "What series do you put on when you just want to relax?"],
+  ["🍰 SWEET OR SAVOURY", "If you could only choose one forever, would you pick sweet snacks or savoury snacks?"],
+  ["🛍️ GUILTY PLEASURE", "What is something you happily spend money on even when you probably shouldn't?"],
+  ["🧳 PACK YOUR BAGS", "If you had to leave for a weekend trip in 30 minutes, where would you go?"],
+  ["🎁 BEST GIFT", "What is the best gift someone has ever given you?"],
+  ["🧒 CHILDHOOD DREAM", "What did you want to be when you grew up, and how far off were you?"],
+  ["🎤 KARAOKE NIGHT", "What song would you choose if someone forced you to sing karaoke right now?"],
+  ["🦄 RANDOM FACT ABOUT YOU", "Tell the team one unusual thing about yourself that sounds made up but is true."],
+  ["📚 LIFE LESSON", "What is one piece of advice you wish you had learned earlier?"],
+  ["🍳 KITCHEN CONFESSION", "What food do you love eating but have absolutely no idea how to cook?"],
+  ["🎉 PERFECT CELEBRATION", "Would you rather celebrate your birthday with a big party or a quiet day doing whatever you want?"],
+  ["🌟 APPRECIATION MOMENT", "What is one small thing a colleague can do that makes your workday better?"],
+  ["🔥 HOT TAKE", "Pineapple belongs on pizza. Agree or disagree?"],
+  ["🍟 FOOD CRIMES", "What food combination do you love that other people think is disgusting?"],
+  ["🎄 FESTIVE DEBATE", "When is it officially acceptable to start playing Christmas music?"],
+  ["📱 SOCIAL MEDIA", "Would the world be better if social media disappeared for a month?"],
+  ["🐈 PET DEBATE", "Who makes the better pet: cats or dogs? You must choose a side."],
+  ["🧹 HOUSEHOLD POLITICS", "Which household chore should be permanently abolished?"],
+  ["🎶 MUSIC OPINION", "What popular song do you secretly think is terrible?"],
+  ["🕰️ EARLY BIRD", "Are morning people genuinely happy, or are they just pretending?"],
+  ["💬 MESSAGE MANNERS", "If someone reads your message and doesn't reply, how long before it becomes suspicious?"],
+  ["💰 MONEY OR TIME", "Would you rather get extra money every month or have every Friday off?"],
+  ["📵 DIGITAL DETOX", "Would you rather give up your phone for a week or your favourite takeaway for a month?"],
+  ["🎤 PUBLIC EMBARRASSMENT", "Would you rather accidentally send a private message to the work group or have your search history projected in a meeting?"],
+  ["🧠 MIND READING", "Would you rather everyone hear your thoughts for one hour or hear everyone else's thoughts for one hour?"],
+  ["🏝️ DREAM BREAK", "Would you rather have a paid month off or work remotely from anywhere in the world for a year?"],
+  ["⏳ TIME MACHINE", "Would you rather relive your best day or skip ahead to see your life ten years from now?"],
+  ["😴 ENERGY CRISIS", "Would you rather never need sleep or never need to eat?"],
+  ["🦸 SUPERPOWER", "Would you rather teleport anywhere or pause time for 10 minutes a day?"],
+  ["😂 FINISH THE SENTENCE", "The most dangerous sentence at work is: 'Can I just ask you something?' What is yours?"],
+  ["👀 HONEST ANSWERS ONLY", "What is something everyone does at work but nobody admits to?"],
+  ["🍪 SNACK POLITICS", "Should the person who finishes the last biscuit have to replace the whole packet?"],
+  ["🎶 OFFICE SOUNDTRACK", "What song should play every time you walk into the room?"],
+  ["🗂️ ORGANISATION DEBATE", "Are you a neat desk person or a 'my mess makes sense to me' person?"],
+  ["📞 PHONE CALL PHILOSOPHY", "Would you rather receive 20 messages or have one 20-minute phone call?"],
+  ["🥇 OFFICE AWARDS", "What completely unofficial award should exist in this team, and who would win it?"],
+  ["🤐 CONFESSION TIME", "What is something completely normal that you are embarrassingly bad at?"],
+  ["🍕 FOOD DEBATE", "Is pizza better hot or cold the next day?"],
+  ["🎬 MOVIE RULES", "Is watching the same movie for the tenth time comforting or concerning?"],
+  ["🧹 CHORE CHOICE", "Would you rather do the dishes every day or laundry every weekend?"],
+  ["🎲 QUICK CHOICE", "Beach holiday or mountain getaway? You have to pick one."],
+  ["🌞 MORNING OR NIGHT", "Are you more productive in the morning or late at night?"],
+  ["🧁 CAKE OR ICE CREAM", "If you had to choose one forever, would you pick cake or ice cream?"],
+  ["🧳 ONE THING TO PACK", "What three things would you take to a deserted island? You have five seconds!"],
+  ["🎭 MOVIE TITLE MOOD", "Describe how you feel today using only a movie title."],
+  ["🎯 EMOJI ONLY", "Describe your day so far using exactly three emojis."],
+  ["🎶 THEME SONG", "Choose a theme song for how your day is going so far."],
+  ["🕵️ COLOUR CHALLENGE", "Find three things nearby that are the same colour."],
+  ["🤝 KINDNESS BONUS", "Give someone a genuine compliment before the day ends."],
+  ["🙌 HIGH FIVE!", "Find a willing colleague and exchange the most enthusiastic high five possible."],
+  ["💛 LITTLE RESET", "Take a deep breath, relax your shoulders and give yourself a moment."],
+  ["😊 PROFESSIONAL SUNSHINE", "Tell a colleague one thing you appreciate about them."],
+  ["🥳 YOU'VE BEEN SELECTED", "For absolutely no reason whatsoever. Congratulations!"],
+  ["😎 COOL PERSON ALERT", "This tag has detected a suspiciously cool person."],
+  ["🦆 OFFICIAL DUCK BUSINESS", "A duck has reviewed your day and would like to inform you that you're doing quackingly well."],
+  ["🥔 POTATO OF THE DAY", "You have been promoted to Senior Potato. Your responsibilities include existing and being a little bit tired."],
+  ["🦥 SLOTH MODE", "Your energy-saving mode has been activated. This is a feature, not a bug."],
+  ["🧦 SOCK INVESTIGATION", "Where do all the missing socks go? Discuss your leading theory with a colleague."],
+  ["🎰 SURPRISE LOTTERY", "You have won absolutely nothing except this moment of suspense. Congratulations!"],
+  ["🧠 BIG BRAIN MOMENT", "You tapped a sticker and received a message. Technology has peaked."],
+  ["🌈 GOOD VIBES ONLY", "Take a breath. You've got this. One thing at a time."],
+  ["👏 TINY VICTORY", "Name one small win you've had this week. It counts, even if it seems tiny."],
+  ["🗣️ UNPOPULAR OPINION", "What is a harmless opinion you have that could start a friendly debate?"],
+  ["🎉 TEAM CHALLENGE", "Ask someone nearby this question: unlimited snacks or unlimited holidays? Why?"],
+  ["🤔 IMPORTANT DEBATE", "Is it better to be five minutes early or exactly on time?"],
+  ["🍿 MOVIE SNACKS", "What is the ultimate movie snack: popcorn, sweets, chocolate or crisps?"],
+  ["🎁 GIFT QUESTION", "Would you rather receive a thoughtful handmade gift or choose your own present?"],
+  ["🌟 GOOD THING", "Name one little thing that made you smile recently."],
+  ["😂 MAKE SOMEONE LAUGH", "Your mini mission: make one person laugh today. No explanation required."],
+  ["🧩 TWO TRUTHS AND A LIE", "Tell a colleague two true things and one lie about yourself. Can they guess the lie?"],
+  ["📣 TEAM VOTE", "Vote as a team: sweet snacks or salty snacks? No fence-sitting allowed."],
+  ["🍫 CHOCOLATE QUESTION", "White, milk or dark chocolate? Pick your champion and defend it."],
+  ["🍬 SWEET QUESTION", "What is the one sweet you could never say no to?"],
+  ["🥨 SNACK QUESTION", "What snack would you choose if you could have an unlimited supply for a year?"]
+];
+
+// Keep the displayed count accurate automatically.
+document.getElementById('count').textContent = surprises.length;
+
+let last = -1;
+function reveal() {
+  let i;
+  do {
+    i = Math.floor(Math.random() * surprises.length);
+  } while (surprises.length > 1 && i === last);
+
+  last = i;
+  const [heading, message] = surprises[i];
+  const result = document.getElementById('result');
+  result.classList.remove('spin');
+  void result.offsetWidth;
+  result.classList.add('spin');
+  result.innerHTML = `<div><h2>${heading}</h2><p>${message}</p></div>`;
+}
+
+window.addEventListener('load', () => {
+  window.setTimeout(reveal, 500);
+});
+</script>
+</body>
+</html>
